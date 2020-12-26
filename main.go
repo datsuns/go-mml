@@ -81,6 +81,7 @@ func main() {
 	dir, file := filepath.Split(opt.MmlFilePath)
 	ext := filepath.Ext(file)
 	dest := strings.TrimSuffix(file, ext) + ".nsf"
+	header := strings.TrimSuffix(file, ext) + ".h"
 
 	os.Chdir(dir)
 
@@ -91,5 +92,15 @@ func main() {
 	ret, _ = exec.Command(opt.PathNesasm, "-s", "-raw", "ppmck.asm").CombinedOutput()
 	showCommandLog(ret)
 
-	os.Rename("ppmck.nes", dest)
+	err = os.Rename("ppmck.nes", dest)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, f := range []string{"define.inc", "effect.h", header} {
+		err = os.Remove(f)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
