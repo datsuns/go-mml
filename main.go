@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/faiface/beep"
 	"github.com/faiface/beep/speaker"
 	"github.com/faiface/beep/wav"
 	"golang.org/x/text/encoding/japanese"
@@ -135,8 +136,11 @@ func playWave(path string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	speaker.Play(streamer)
-	select {}
+	done := make(chan bool)
+	speaker.Play(beep.Seq(streamer, beep.Callback(func() {
+		done <- true
+	})))
+	<-done
 }
 
 func main() {
