@@ -6,11 +6,15 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/faiface/beep/speaker"
+	"github.com/faiface/beep/wav"
 	"golang.org/x/text/encoding/japanese"
 	"golang.org/x/text/transform"
 )
@@ -83,7 +87,7 @@ func main() {
 	dir, file := filepath.Split(opt.MmlFilePath)
 	ext := filepath.Ext(file)
 	nsf := strings.TrimSuffix(file, ext) + ".nsf"
-	wav := strings.TrimSuffix(file, ext) + ".wav"
+	wave := strings.TrimSuffix(file, ext) + ".wav"
 	header := strings.TrimSuffix(file, ext) + ".h"
 
 	os.Chdir(dir)
@@ -107,6 +111,23 @@ func main() {
 		}
 	}
 
-	ret, _ = exec.Command(opt.PathNsf2wav, nsf, wav).CombinedOutput()
+	ret, _ = exec.Command(opt.PathNsf2wav, nsf, wave).CombinedOutput()
 	showCommandLog(ret)
+
+	f, err := os.Open(wave)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	streamer, format, err := wav.Decode(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer streamer.Close()
+	err = speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+	if err != nil {
+		log.Fatal(err)
+	}
+	speaker.Play(streamer)
+	select {}
 }
