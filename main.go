@@ -21,6 +21,7 @@ import (
 )
 
 type Options struct {
+	CompileOnly     bool
 	PPMCKRootPath   string
 	PathPppckc      string
 	PathNesasm      string
@@ -31,6 +32,7 @@ type Options struct {
 
 func parseOption() *Options {
 	ret := &Options{}
+	flag.BoolVar(&ret.CompileOnly, "c", false, "compile mode")
 	flag.StringVar(&ret.PPMCKRootPath, "m", "", "path to root dir to ppmck")
 	flag.StringVar(&ret.PathNsf2wav, "n", "", "path to nsf2wav command")
 	flag.StringVar(&ret.MmlFilePath, "f", "", "path to mml file")
@@ -158,5 +160,9 @@ func main() {
 
 	genNsf(opt, nsf, header)
 	genWave(opt, nsf, wave)
+
+	if opt.CompileOnly {
+		return
+	}
 	playWave(wave)
 }
