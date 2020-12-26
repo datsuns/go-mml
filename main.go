@@ -19,6 +19,7 @@ type Options struct {
 	PPMCKRootPath   string
 	PathPppckc      string
 	PathNesasm      string
+	PathNsf2wav     string
 	PathNesIinclude string
 	MmlFilePath     string
 }
@@ -26,6 +27,7 @@ type Options struct {
 func parseOption() *Options {
 	ret := &Options{}
 	flag.StringVar(&ret.PPMCKRootPath, "m", "", "path to root dir to ppmck")
+	flag.StringVar(&ret.PathNsf2wav, "n", "", "path to nsf2wav command")
 	flag.StringVar(&ret.MmlFilePath, "f", "", "path to mml file")
 	flag.Parse()
 
@@ -80,7 +82,8 @@ func main() {
 
 	dir, file := filepath.Split(opt.MmlFilePath)
 	ext := filepath.Ext(file)
-	dest := strings.TrimSuffix(file, ext) + ".nsf"
+	nsf := strings.TrimSuffix(file, ext) + ".nsf"
+	wav := strings.TrimSuffix(file, ext) + ".wav"
 	header := strings.TrimSuffix(file, ext) + ".h"
 
 	os.Chdir(dir)
@@ -92,7 +95,7 @@ func main() {
 	ret, _ = exec.Command(opt.PathNesasm, "-s", "-raw", "ppmck.asm").CombinedOutput()
 	showCommandLog(ret)
 
-	err = os.Rename("ppmck.nes", dest)
+	err = os.Rename("ppmck.nes", nsf)
 	if err != nil {
 		panic(err)
 	}
@@ -103,4 +106,7 @@ func main() {
 			panic(err)
 		}
 	}
+
+	ret, _ = exec.Command(opt.PathNsf2wav, nsf, wav).CombinedOutput()
+	showCommandLog(ret)
 }
