@@ -70,51 +70,58 @@ func showCommandLog(b []byte) {
 	fmt.Println(log)
 }
 
-func main() {
-	opt := parseOption()
-	showOption(opt)
-
+func envSetup(opt *Options) {
 	var err error
 	err = os.Setenv("PPMCK_BASEDIR", opt.PPMCKRootPath)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	err = os.Setenv("NES_INCLUDE", opt.PathNesIinclude)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
+}
 
-	dir, file := filepath.Split(opt.MmlFilePath)
-	ext := filepath.Ext(file)
-	nsf := strings.TrimSuffix(file, ext) + ".nsf"
-	wave := strings.TrimSuffix(file, ext) + ".wav"
-	header := strings.TrimSuffix(file, ext) + ".h"
-
-	os.Chdir(dir)
-
+func genNsf(opt *Options, nsf, header string) {
 	var ret []byte
-	ret, _ = exec.Command(opt.PathPppckc, "-i", opt.MmlFilePath).CombinedOutput()
+	var err error
+
+	ret, err = exec.Command(opt.PathPppckc, "-i", opt.MmlFilePath).CombinedOutput()
+	if err != nil {
+		log.Fatal(err)
+	}
 	showCommandLog(ret)
 
-	ret, _ = exec.Command(opt.PathNesasm, "-s", "-raw", "ppmck.asm").CombinedOutput()
+	ret, err = exec.Command(opt.PathNesasm, "-s", "-raw", "ppmck.asm").CombinedOutput()
+	if err != nil {
+		log.Fatal(err)
+	}
 	showCommandLog(ret)
 
 	err = os.Rename("ppmck.nes", nsf)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	for _, f := range []string{"define.inc", "effect.h", header} {
 		err = os.Remove(f)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 	}
+}
 
-	ret, _ = exec.Command(opt.PathNsf2wav, nsf, wave).CombinedOutput()
+func genWave(opt *Options, src, dest string) {
+	ret, err := exec.Command(opt.PathNsf2wav, src, dest).CombinedOutput()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	showCommandLog(ret)
+}
 
-	f, err := os.Open(wave)
+func playWave(path string) {
+	f, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -130,4 +137,22 @@ func main() {
 	}
 	speaker.Play(streamer)
 	select {}
+}
+
+func main() {
+	opt := parseOption()
+	showOption(opt)
+	envSetup(opt)
+
+	dir, file := filepath.Split(opt.MmlFilePath)
+	ext := filepath.Ext(file)
+	wave := strings.TrimSuffix(file, ext) + ".wav"
+	nsf := strings.TrimSuffix(file, ext) + ".nsf"
+	header := strings.TrimSuffix(file, ext) + ".h"
+
+	os.Chdir(dir)
+
+	genNsf(opt, nsf, header)
+	genWave(opt, nsf, wave)
+	playWave(wave)
 }
