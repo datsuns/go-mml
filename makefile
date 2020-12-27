@@ -6,10 +6,12 @@ default: build test
 build: $(BIN)
 
 test:
-	./$(BIN) \
+	go install
+	$(BIN) \
+		-s \
 		-m $(USERPROFILE)\tools\nsf\ppmck09a\mck \
 		-n $(USERPROFILE)\tools\nsf\nsf2wav\nsf2wav \
-		-f $(USERPROFILE)\Desktop\sample_auto_bank.mml
+		-f .\test\sample_auto_bank.mml
 
 setup:
 	go get -u golang.org/x/text/encoding/japanese
