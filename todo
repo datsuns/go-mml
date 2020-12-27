@@ -1,7 +1,7 @@
-[ ]build mml to nsf
-  [ ]seaech ppmck
-  [ ]implement like ppmck/songs/mknsf.bat
-[ ]convert nsf to wav
-  [ ]use nsf2wav
-[ ]play wav
-  [ ]maybe use https://github.com/faiface/beep
+[x]build mml to nsf
+  [x]seaech ppmck
+  [x]implement like ppmck/songs/mknsf.bat
+[x]convert nsf to wav
+  [x]use nsf2wav
+[x]play wav
+  [x]maybe use https://github.com/faiface/beep
