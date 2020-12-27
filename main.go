@@ -21,17 +21,21 @@ import (
 )
 
 type Options struct {
-	CompileOnly     bool
-	PPMCKRootPath   string
-	PathPppckc      string
-	PathNesasm      string
-	PathNsf2wav     string
-	PathNesIinclude string
-	MmlFilePath     string
+	Silent           bool
+	KeepWorkingFiles bool
+	CompileOnly      bool
+	PPMCKRootPath    string
+	PathPppckc       string
+	PathNesasm       string
+	PathNsf2wav      string
+	PathNesIinclude  string
+	MmlFilePath      string
 }
 
 func parseOption() *Options {
 	ret := &Options{}
+	flag.BoolVar(&ret.Silent, "s", false, "hide output from compiles")
+	flag.BoolVar(&ret.KeepWorkingFiles, "k", false, "skip cleanup ppmkc working files (define.inc, effect.h, ..)")
 	flag.BoolVar(&ret.CompileOnly, "c", false, "compile mode")
 	flag.StringVar(&ret.PPMCKRootPath, "m", "", "path to root dir to ppmck")
 	flag.StringVar(&ret.PathNsf2wav, "n", "", "path to nsf2wav command")
@@ -45,6 +49,9 @@ func parseOption() *Options {
 }
 
 func showOption(opt *Options) {
+	if opt.Silent {
+		return
+	}
 	fmt.Printf("PPMCK_BASEDIR  [%s]\n", opt.PPMCKRootPath)
 	fmt.Printf("NES_INCLUDE    [%s]\n", opt.PathNesIinclude)
 	fmt.Printf("path to ppmckc [%s]\n", opt.PathPppckc)
@@ -65,12 +72,16 @@ func bytesFromShiftJIS(b []byte) (string, error) {
 	return transformEncoding(bytes.NewReader(b), japanese.ShiftJIS.NewDecoder())
 }
 
-func showCommandLog(b []byte) {
-	log, err := bytesFromShiftJIS(b)
-	if err != nil {
-		panic(err)
+func showCommandLog(opt *Options, b []byte) {
+	if opt.Silent {
+		return
 	}
-	fmt.Println(log)
+
+	text, err := bytesFromShiftJIS(b)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(text)
 }
 
 func envSetup(opt *Options) {
@@ -85,25 +96,29 @@ func envSetup(opt *Options) {
 	}
 }
 
-func genNsf(opt *Options, nsf, header string) {
+func genNsf(opt *Options, mml, nsf, header string) {
 	var ret []byte
 	var err error
 
-	ret, err = exec.Command(opt.PathPppckc, "-i", opt.MmlFilePath).CombinedOutput()
+	ret, err = exec.Command(opt.PathPppckc, "-i", mml).CombinedOutput()
+	showCommandLog(opt, ret)
 	if err != nil {
 		log.Fatal(err)
 	}
-	showCommandLog(ret)
 
 	ret, err = exec.Command(opt.PathNesasm, "-s", "-raw", "ppmck.asm").CombinedOutput()
+	showCommandLog(opt, ret)
 	if err != nil {
 		log.Fatal(err)
 	}
-	showCommandLog(ret)
 
 	err = os.Rename("ppmck.nes", nsf)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if opt.KeepWorkingFiles {
+		return
 	}
 
 	for _, f := range []string{"define.inc", "effect.h", header} {
@@ -120,7 +135,7 @@ func genWave(opt *Options, src, dest string) {
 		log.Fatal(err)
 	}
 
-	showCommandLog(ret)
+	showCommandLog(opt, ret)
 }
 
 func playWave(path string) {
@@ -151,6 +166,7 @@ func main() {
 	envSetup(opt)
 
 	dir, file := filepath.Split(opt.MmlFilePath)
+	mml := file
 	ext := filepath.Ext(file)
 	wave := strings.TrimSuffix(file, ext) + ".wav"
 	nsf := strings.TrimSuffix(file, ext) + ".nsf"
@@ -158,7 +174,7 @@ func main() {
 
 	os.Chdir(dir)
 
-	genNsf(opt, nsf, header)
+	genNsf(opt, mml, nsf, header)
 	genWave(opt, nsf, wave)
 
 	if opt.CompileOnly {
