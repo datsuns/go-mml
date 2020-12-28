@@ -28,7 +28,6 @@ type Options struct {
 	PPMCKRootPath    string
 	PathPppckc       string
 	PathNesasm       string
-	PathNsf2wav      string
 	PathNesIinclude  string
 	MmlFilePath      string
 }
@@ -39,7 +38,6 @@ func parseOption() *Options {
 	flag.BoolVar(&ret.KeepWorkingFiles, "k", false, "skip cleanup ppmkc working files (define.inc, effect.h, ..)")
 	flag.BoolVar(&ret.CompileOnly, "c", false, "compile mode")
 	flag.StringVar(&ret.PPMCKRootPath, "m", "", "path to root dir to ppmck")
-	flag.StringVar(&ret.PathNsf2wav, "n", "", "path to nsf2wav command")
 	flag.StringVar(&ret.MmlFilePath, "f", "", "path to mml file")
 	flag.Parse()
 
