@@ -1,9 +1,10 @@
-BIN := go-mml.exe
-SRC := $(wildcard *.go)
+GME_VER := 0.5.2
+BIN 		:= go-mml.exe
+SRC 		:= $(wildcard *.go)
 
 default: build test
 
-build: $(BIN)
+build: lib $(BIN)
 
 test:
 	go install
@@ -20,7 +21,14 @@ setup:
 	go get -u github.com/pkg/errors
 	go get -u github.com/hajimehoshi/oto
 
+lib:
+	make -C ./lib get GME_VER=$(GME_VER)
+	make -C ./lib GME_VER=$(GME_VER)
+
+clean:
+	make -C ./lib clean
+
 $(BIN): $(SRC)
 	go build -o $@ $^
 
-.PHONY: default build test setup
+.PHONY: default build test setup lib clean

@@ -1,0 +1,5 @@
+*
+!.gitignore
+!download.bat
+!nsf2wav.c
+!makefile

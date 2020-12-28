@@ -1,6 +1,7 @@
 package main
 
 import (
+	"C"
 	"bytes"
 	"flag"
 	"fmt"
@@ -130,12 +131,10 @@ func genNsf(opt *Options, mml, nsf, header string) {
 }
 
 func genWave(opt *Options, src, dest string) {
-	ret, err := exec.Command(opt.PathNsf2wav, src, dest).CombinedOutput()
-	if err != nil {
-		log.Fatal(err)
+	ret := nsf2wav(src, dest)
+	if ret != 0 {
+		log.Fatal("nsf2wave error [%d]\n", ret)
 	}
-
-	showCommandLog(opt, ret)
 }
 
 func playWave(path string) {
