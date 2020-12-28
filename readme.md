@@ -4,6 +4,7 @@
 
 1. use `ppmck` to compile mml file to nsf.
 1. convert nsf file to wave by `Game Music Emu` library.
+   * use `Game Music Emu` by cgo
 1. play wave file.
 
 ## setup
@@ -15,7 +16,7 @@
    * `go get -u golang.org/x/text`
 1. then, download this package, and `make`
    * `git clone https://github.com/datsuns/go-mml`
-   * `cd go-mml && make`
+   * `cd go-mml && make lib && make`
 
 ## usage
 

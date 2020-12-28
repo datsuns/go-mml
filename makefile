@@ -4,14 +4,13 @@ SRC 		:= $(wildcard *.go)
 
 default: build test
 
-build: lib $(BIN)
+build: $(BIN)
 
 test:
 	go install
 	$(BIN) \
 		-s \
 		-m $(USERPROFILE)\tools\nsf\ppmck09a\mck \
-		-n $(USERPROFILE)\tools\nsf\nsf2wav\nsf2wav \
 		-f .\test\sample_auto_bank.mml
 
 setup:
@@ -22,7 +21,6 @@ setup:
 	go get -u github.com/hajimehoshi/oto
 
 lib:
-	make -C ./lib get GME_VER=$(GME_VER)
 	make -C ./lib GME_VER=$(GME_VER)
 
 clean:
