@@ -7,19 +7,19 @@ GME_DEST := gme
 GME_ROOT := $(GME_DEST)/Game_Music_Emu-$(GME_VER)
 GME_DIR  := $(GME_ROOT)/$(GME_DEST)
 
-BIN			:= libGme.a
+BIN		:= libGme.a
 CSRC		:= \
-					./nfs2wav.c
+				./nfs2wav.c
 CPPSRC	:= \
-					$(GME_ROOT)/demo/Wave_Writer.cpp \
-					$(wildcard $(GME_DIR)/*.cpp)
+				$(GME_ROOT)/demo/Wave_Writer.cpp \
+				$(wildcard $(GME_DIR)/*.cpp)
 COBJ		:= $(CSRC:.c=.o)
 CPPOBJ	:= $(CPPSRC:.cpp=.o)
 OBJ 		:= $(COBJ) $(CPPOBJ)
 
 CPPFLAGS += -I$(GME_ROOT) -I$(GME_ROOT)/demo
 
-default: build run
+default: build
 
 build: $(BIN)
 
@@ -35,4 +35,4 @@ $(BIN): $(OBJ)
 $(GME_DIR)/gme.zip:
 	download $(GME_VER) $(GME_DEST)
 
-.PHONY: default clean build run get
+.PHONY: default clean build get
