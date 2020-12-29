@@ -9,8 +9,8 @@ build: $(BIN)
 test:
 	go install
 	$(BIN) \
-		-s \
 		-m $(USERPROFILE)\tools\nsf\ppmck09a\mck \
+		-l $(USERPROFILE)\tools\lame\lame \
 		-f .\test\sample_auto_bank.mml
 
 setup:

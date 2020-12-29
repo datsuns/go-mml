@@ -20,7 +20,7 @@
 
 ## usage
 
-`go-mml [-s][-k][-c] -m <ppmck-basedir> -f <mml-filepath>`
+`go-mml [-s][-k][-c][-l <lame-command>] -m <ppmck-basedir> -f <mml-filepath>`
 
 * -m: root directory to location of ppmck.
    * e.g. `c:\Users\user\work\ppmck\mck`
@@ -28,6 +28,7 @@
 * -s: silent mode. hide outputs from commands. default: **FALSE**
 * -k: keep working files. skip cleanup ppmck working files. default: **FALSE**
 * -c: compile only. skip playing wave file. default: **FALSE**
+* -l: path to lame command. play by mp3 if this option specified.
 
 # appendix
 

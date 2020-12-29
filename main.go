@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/faiface/beep"
+	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
 	"github.com/faiface/beep/wav"
 	"golang.org/x/text/encoding/japanese"
@@ -28,6 +29,7 @@ type Options struct {
 	PPMCKRootPath    string
 	PathPppckc       string
 	PathNesasm       string
+	PathLame         string
 	PathNesIinclude  string
 	MmlFilePath      string
 }
@@ -38,6 +40,7 @@ func parseOption() *Options {
 	flag.BoolVar(&ret.KeepWorkingFiles, "k", false, "skip cleanup ppmkc working files (define.inc, effect.h, ..)")
 	flag.BoolVar(&ret.CompileOnly, "c", false, "compile mode")
 	flag.StringVar(&ret.PPMCKRootPath, "m", "", "path to root dir to ppmck")
+	flag.StringVar(&ret.PathLame, "l", "", "path to lame command")
 	flag.StringVar(&ret.MmlFilePath, "f", "", "path to mml file")
 	flag.Parse()
 
@@ -54,6 +57,7 @@ func showOption(opt *Options) {
 	fmt.Printf("PPMCK_BASEDIR  [%s]\n", opt.PPMCKRootPath)
 	fmt.Printf("NES_INCLUDE    [%s]\n", opt.PathNesIinclude)
 	fmt.Printf("path to ppmckc [%s]\n", opt.PathPppckc)
+	fmt.Printf("path to lame   [%s]\n", opt.PathLame)
 	fmt.Printf("mml file       [%s]\n", opt.MmlFilePath)
 }
 
@@ -131,21 +135,38 @@ func genNsf(opt *Options, mml, nsf, header string) {
 func genWave(opt *Options, src, dest string) {
 	ret := nsf2wav(src, dest)
 	if ret != 0 {
-		log.Fatal("nsf2wave error [%d]\n", ret)
+		log.Fatalf("nsf2wave error [%d]\n", ret)
 	}
 }
 
-func playWave(path string) {
+func genMp3(opt *Options, src, dest string) {
+	ret, err := exec.Command(opt.PathLame, src, dest).CombinedOutput()
+	showCommandLog(opt, ret)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func playSound(opt *Options, path string) {
+	var err error
 	f, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer f.Close()
 
-	streamer, format, err := wav.Decode(f)
+	var format beep.Format
+	var streamer beep.StreamSeekCloser
+	if opt.PathLame != "" {
+		streamer, format, err = mp3.Decode(f)
+	} else {
+		streamer, format, err = wav.Decode(f)
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer streamer.Close()
+
 	err = speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 	if err != nil {
 		log.Fatal(err)
@@ -165,17 +186,28 @@ func main() {
 	dir, file := filepath.Split(opt.MmlFilePath)
 	mml := file
 	ext := filepath.Ext(file)
-	wave := strings.TrimSuffix(file, ext) + ".wav"
-	nsf := strings.TrimSuffix(file, ext) + ".nsf"
-	header := strings.TrimSuffix(file, ext) + ".h"
+	body := strings.TrimSuffix(file, ext)
+	wavePath := body + ".wav"
+	mp3Path := body + ".mp3"
+	nsf := body + ".nsf"
+	header := body + ".h"
 
 	os.Chdir(dir)
 
 	genNsf(opt, mml, nsf, header)
-	genWave(opt, nsf, wave)
+	genWave(opt, nsf, wavePath)
+	if opt.PathLame != "" {
+		genMp3(opt, wavePath, mp3Path)
+		os.Remove(wavePath)
+	}
 
 	if opt.CompileOnly {
 		return
 	}
-	playWave(wave)
+
+	if opt.PathLame != "" {
+		playSound(opt, mp3Path)
+	} else {
+		playSound(opt, wavePath)
+	}
 }
