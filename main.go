@@ -176,7 +176,6 @@ func playSound(opt *Options, path string) {
 		done <- true
 	})))
 	<-done
-	time.Sleep(time.Millisecond * 100)
 }
 
 func main() {
