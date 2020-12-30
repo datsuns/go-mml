@@ -27,8 +27,6 @@ clean:
 	-rm $(OBJ)
 	-rm $(BIN)
 
-$(CPPOBJ): $(GME_DIR)/gme.zip
-
 $(BIN): $(OBJ)
 	$(AR) cru -o $@ $^
 
